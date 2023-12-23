@@ -33,7 +33,6 @@ impl RawTerminal {
 
     fn clear_screen() {
         io::stdout().write_all(b"\x1B[2J").unwrap();
-        io::stdout().write_all(b"\x1B[H").unwrap();
     }
 
     fn restore_original_termios(&self) {

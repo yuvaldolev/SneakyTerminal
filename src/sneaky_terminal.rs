@@ -13,6 +13,7 @@ pub struct SneakyTerminal {
     timer: Timer,
     renderer: Renderer,
     arena: Arena,
+    player: UVec2,
 }
 
 const ARENA_SIZE: UVec2 = UVec2::new(150, 50);
@@ -29,6 +30,7 @@ impl SneakyTerminal {
             timer: Timer::new(),
             renderer: Renderer::new(ARENA_SIZE),
             arena: Arena::new(ARENA_SIZE),
+            player: UVec2::new(1, 1),
         }
     }
 
@@ -41,6 +43,9 @@ impl SneakyTerminal {
             if !self.process_input_events(&mut input_events) {
                 break;
             }
+
+            // TODO: Skip simulation and rendering if input events are empty and
+            // not enough time has passed since the last simulation + render.
 
             // Simulate the game.
             self.simulate(&input_events);
@@ -67,13 +72,25 @@ impl SneakyTerminal {
     }
 
     fn simulate(&mut self, input_events: &[InputEvent]) {
-        let delta_time = self.timer.measure_delta();
+        // let delta_time = self.timer.measure_delta();
+
+        for input_event in input_events.iter() {
+            match input_event {
+                InputEvent::Up => self.player.y += 1,
+                InputEvent::Down => self.player.y -= 1,
+                InputEvent::Left => self.player.x -= 1,
+                InputEvent::Right => self.player.x += 1,
+                _ => {}
+            }
+        }
+
         // snake.simulate(input_events, delta_time);
     }
 
     fn render(&mut self) {
         self.renderer.begin_scene();
         self.renderer.draw_arena(&self.arena);
+        self.renderer.draw_player(self.player);
         self.renderer.end_scene();
     }
 }

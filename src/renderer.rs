@@ -22,11 +22,6 @@ impl Renderer {
     }
 
     pub fn begin_scene(&mut self) {
-        if self.first_frame {
-            self.first_frame = false;
-            return;
-        }
-
         self.reset_cursor();
     }
 
@@ -36,15 +31,26 @@ impl Renderer {
     }
 
     pub fn draw_arena(&mut self, arena: &Arena) {
+        // Draw the borders.
         self.draw_horizontal_border(0, arena.get_width());
         self.draw_vertical_border(0, arena.get_height());
         self.draw_vertical_border(arena.get_width() - 1, arena.get_height());
         self.draw_horizontal_border(arena.get_height() - 1, arena.get_width());
+
+        // Draw the reset of the arena as spaces.
+        for y in 1..arena.get_height() - 1 {
+            for x in 1..arena.get_width() - 1 {
+                self.draw_character(' ', UVec2::new(x, y));
+            }
+        }
+    }
+
+    pub fn draw_player(&mut self, player: UVec2) {
+        self.draw_character('█', player);
     }
 
     fn reset_cursor(&mut self) {
-        write!(self.stdout, "\x1B[{}F", self.screen_dimensions.y).unwrap();
-        self.stdout.write_all(b"\r").unwrap();
+        self.stdout.write_all(b"\x1B[H").unwrap();
     }
 
     fn flush(&mut self) {
