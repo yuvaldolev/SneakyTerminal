@@ -1,12 +1,10 @@
-use std::time::Duration;
-
 use crossbeam::channel::{self, Receiver, Sender};
 use glam::{UVec2, Vec2};
-use spin_sleep::SpinSleeper;
 
 use crate::{
     arena::Arena, direction::Direction, input_event::InputEvent, input_receiver::InputReceiver,
     raw_terminal::RawTerminal, renderer::Renderer, snake::Snake, timer::Timer,
+    vsync_awaiter::VsyncAwaiter,
 };
 
 pub struct SneakyTerminal {
@@ -14,15 +12,14 @@ pub struct SneakyTerminal {
     _input_receiver: InputReceiver,
     input_event_receiver: Receiver<InputEvent>,
     frame_timer: Timer,
-    work_timer: Timer,
     renderer: Renderer,
-    sleeper: SpinSleeper,
+    vsync_awaiter: VsyncAwaiter,
     arena: Arena,
     snake: Snake,
 }
 
 const ARENA_SIZE: UVec2 = UVec2::new(150, 50);
-const TARGET_SECONDS_PER_FRAME: f32 = 1.0 / 60.0;
+const GAME_UPDATE_HZ: u32 = 60;
 
 impl SneakyTerminal {
     pub fn new() -> Self {
@@ -34,9 +31,8 @@ impl SneakyTerminal {
             _input_receiver: InputReceiver::new(input_event_sender),
             input_event_receiver,
             frame_timer: Timer::new(),
-            work_timer: Timer::new(),
             renderer: Renderer::new(ARENA_SIZE),
-            sleeper: SpinSleeper::new(Duration::from_secs(1).as_nanos() as u32),
+            vsync_awaiter: VsyncAwaiter::new(GAME_UPDATE_HZ),
             arena: Arena::new(ARENA_SIZE),
             snake: Snake::new(Vec2::new(
                 (ARENA_SIZE.x as f32) / 2.0,
@@ -59,12 +55,9 @@ impl SneakyTerminal {
 
             self.render();
 
-            self.work_timer.tick();
-
-            self.wait_for_target_seconds_per_frame();
+            self.vsync_awaiter.wait();
 
             self.frame_timer.tick();
-            self.work_timer.tick();
         }
     }
 
@@ -107,14 +100,6 @@ impl SneakyTerminal {
         );
         self.renderer.draw_snake(&self.snake);
         self.renderer.end_scene();
-    }
-
-    fn wait_for_target_seconds_per_frame(&self) {
-        if self.work_timer.get_delta() < TARGET_SECONDS_PER_FRAME {
-            self.sleeper.sleep(Duration::from_secs_f32(
-                TARGET_SECONDS_PER_FRAME - self.work_timer.get_delta(),
-            ));
-        }
     }
 }
 

@@ -7,5 +7,6 @@ mod renderer;
 mod snake;
 mod sneaky_terminal;
 mod timer;
+mod vsync_awaiter;
 
 pub use sneaky_terminal::SneakyTerminal;
