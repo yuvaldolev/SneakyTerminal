@@ -2,12 +2,11 @@ use std::io::{self, Stdout, Write};
 
 use glam::UVec2;
 
-use crate::arena::Arena;
+use crate::{arena::Arena, snake::Snake};
 
 pub struct Renderer {
     screen_dimensions: UVec2,
     render_buffer: Vec<char>,
-    first_frame: bool,
     stdout: Stdout,
 }
 
@@ -16,7 +15,6 @@ impl Renderer {
         Self {
             screen_dimensions,
             render_buffer: vec![' '; (screen_dimensions.y * screen_dimensions.x) as usize],
-            first_frame: true,
             stdout: io::stdout(),
         }
     }
@@ -38,15 +36,29 @@ impl Renderer {
         self.draw_horizontal_border(arena.get_height() - 1, arena.get_width());
 
         // Draw the reset of the arena as spaces.
-        for y in 1..arena.get_height() - 1 {
-            for x in 1..arena.get_width() - 1 {
+        for y in 1..(arena.get_height() - 1) {
+            for x in 1..(arena.get_width() - 1) {
                 self.draw_character(' ', UVec2::new(x, y));
             }
         }
     }
 
-    pub fn draw_player(&mut self, player: UVec2) {
-        self.draw_character('█', player);
+    pub fn draw_snake(&mut self, snake: &Snake) {
+        for part_index in 0..snake.get_length() {
+            let part = snake.get_part(part_index);
+
+            let left_half = part.as_uvec2();
+            let right_half = left_half + UVec2::new(1, 0);
+
+            self.draw_character('█', left_half);
+            self.draw_character('█', right_half);
+        }
+    }
+
+    pub fn draw_text(&mut self, text: &str, position: UVec2) {
+        for (index, character) in text.chars().enumerate() {
+            self.draw_character(character, position + UVec2::new(index as u32, 0));
+        }
     }
 
     fn reset_cursor(&mut self) {

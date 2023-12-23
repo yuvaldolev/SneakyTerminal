@@ -1,19 +1,25 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 pub struct Timer {
-    last_instant: Instant,
+    instant: Instant,
+    delta: f32,
 }
 
 impl Timer {
     pub fn new() -> Self {
         Self {
-            last_instant: Instant::now(),
+            instant: Instant::now(),
+            delta: 0.0,
         }
     }
 
-    pub fn measure_delta(&mut self) -> Duration {
-        let last_instant = self.last_instant;
-        self.last_instant = Instant::now();
-        self.last_instant - last_instant
+    pub fn tick(&mut self) {
+        let last_instant = self.instant;
+        self.instant = Instant::now();
+        self.delta = (self.instant - last_instant).as_secs_f32();
+    }
+
+    pub fn get_delta(&self) -> f32 {
+        self.delta
     }
 }

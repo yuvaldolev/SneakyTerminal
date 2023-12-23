@@ -37,11 +37,11 @@ impl InputReceiver {
 
     fn process_input(input: u8) -> Option<InputEvent> {
         match input {
-            b'w' => Some(InputEvent::Up),
-            b's' => Some(InputEvent::Down),
-            b'a' => Some(InputEvent::Left),
-            b'd' => Some(InputEvent::Right),
-            b'q' => Some(InputEvent::Quit),
+            b'w' => Some(InputEvent::W),
+            b's' => Some(InputEvent::S),
+            b'a' => Some(InputEvent::A),
+            b'd' => Some(InputEvent::D),
+            b'q' => Some(InputEvent::Q),
             _ => None,
         }
     }
