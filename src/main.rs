@@ -1,3 +1,6 @@
+use sneakyterminal::SneakyTerminal;
+
 fn main() {
-    println!("Hello, world!");
+    let sneaky_terminal = SneakyTerminal::new();
+    sneaky_terminal.run();
 }
