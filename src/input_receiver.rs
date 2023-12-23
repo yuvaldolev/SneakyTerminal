@@ -1,10 +1,10 @@
 use std::{
-    io::{self, Read},
+    io,
     thread::{self, JoinHandle},
 };
 
+use byteorder::ReadBytesExt;
 use crossbeam::channel::Sender;
-use nix::sys::termios::{self, LocalFlags, SetArg};
 
 use crate::input_event::InputEvent;
 
@@ -14,26 +14,17 @@ pub struct InputReceiver {
 
 impl InputReceiver {
     pub fn new(event_sender: Sender<InputEvent>) -> Self {
-        // Ensure non-canonical input.
-        Self::set_non_canonical_input();
-
         Self {
             receiver_thread: Some(thread::spawn(move || Self::receive_input(event_sender))),
         }
     }
 
-    fn set_non_canonical_input() {
-        // TODO: Error handling
-        let mut stdin_termios = termios::tcgetattr(io::stdin()).unwrap();
-        stdin_termios.local_flags.remove(LocalFlags::ICANON);
-        termios::tcsetattr(io::stdin(), SetArg::TCSANOW, &stdin_termios).unwrap();
-    }
-
     fn receive_input(event_sender: Sender<InputEvent>) {
+        let mut stdin = io::stdin();
+
         loop {
-            let Some(input) = io::stdin().bytes().next().and_then(|result| result.ok()) else {
-                continue;
-            };
+            // TODO: Error handling.
+            let input = stdin.read_u8().unwrap();
 
             let Some(input_event) = Self::process_input(input) else {
                 continue;
@@ -50,6 +41,7 @@ impl InputReceiver {
             b's' => Some(InputEvent::Down),
             b'a' => Some(InputEvent::Left),
             b'd' => Some(InputEvent::Right),
+            b'q' => Some(InputEvent::Quit),
             _ => None,
         }
     }
