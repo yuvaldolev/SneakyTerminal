@@ -21,6 +21,10 @@ impl SneakyTerminal {
     pub fn run(&self) {
         loop {
             // Process input events.
+            while !self.input_event_receiver.is_empty() {
+                let input_event = self.input_event_receiver.recv().unwrap();
+                println!("Input Event: {input_event:?}");
+            }
 
             // Simulate the game.
 
