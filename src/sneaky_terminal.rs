@@ -20,7 +20,7 @@ pub struct SneakyTerminal {
 }
 
 const ARENA_SIZE: UVec2 = UVec2::new(80, 30);
-const GAME_UPDATE_HZ: u32 = 25;
+const GAME_UPDATE_HZ: u32 = 15;
 
 impl SneakyTerminal {
     pub fn new() -> Self {
