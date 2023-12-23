@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum InputEvent {
     W,
     S,

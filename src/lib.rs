@@ -1,5 +1,7 @@
 mod arena;
+mod colored_character;
 mod direction;
+mod food;
 mod input_event;
 mod input_receiver;
 mod raw_terminal;

@@ -1,71 +1,72 @@
-use glam::Vec2;
+use glam::{IVec2, UVec2};
 
 use crate::direction::Direction;
 
 pub struct Snake {
-    parts: Vec<Vec2>,
-    velocity: Vec2,
+    parts: Vec<UVec2>,
+    velocity: IVec2,
+    should_grow: bool,
 }
 
-const DIRECTIONAL_VELOCITY: f32 = 15.0;
-
 impl Snake {
-    pub fn new(initial_head_position: Vec2) -> Self {
+    pub fn new(initial_head_position: UVec2) -> Self {
         Self {
-            parts: vec![
-                initial_head_position,
-                initial_head_position - Vec2::new(2.0, 0.0),
-                initial_head_position - Vec2::new(4.0, 0.0),
-                initial_head_position - Vec2::new(6.0, 0.0),
-                initial_head_position - Vec2::new(8.0, 0.0),
-            ],
-            velocity: Vec2::ZERO,
+            parts: vec![initial_head_position],
+            velocity: IVec2::ZERO,
+            should_grow: false,
         }
+    }
+
+    pub fn get_head(&self) -> UVec2 {
+        self.parts[0]
+    }
+
+    pub fn get_parts(&self) -> &[UVec2] {
+        &self.parts
     }
 
     pub fn turn(&mut self, direction: Direction) {
-        match direction {
-            Direction::Up => {
-                self.velocity.x = 0.0;
-                self.velocity.y = DIRECTIONAL_VELOCITY;
-            }
-            Direction::Down => {
-                self.velocity.x = 0.0;
-                self.velocity.y = -DIRECTIONAL_VELOCITY;
-            }
-            Direction::Left => {
-                self.velocity.x = -DIRECTIONAL_VELOCITY;
-                self.velocity.y = 0.0;
-            }
-            Direction::Right => {
-                self.velocity.x = DIRECTIONAL_VELOCITY;
-                self.velocity.y = 0.0;
-            }
-        }
-    }
+        let new_velocity = match direction {
+            Direction::Up => IVec2::new(0, 1),
+            Direction::Down => IVec2::new(0, -1),
+            Direction::Left => IVec2::new(-1, 0),
+            Direction::Right => IVec2::new(1, 0),
+        };
 
-    pub fn crawl(&mut self, delta_time: f32) {
-        // Determine the new head position.
-        let mut head = *self.parts.first().unwrap();
-        let previous_head = head;
-        head += self.velocity * delta_time;
-
-        // Update all non-head part positions.
-        if (head.as_uvec2() != previous_head.as_uvec2()) && (self.parts.len() > 1) {
-            for part_index in (0..(self.parts.len() - 1)).rev() {
-                self.parts[part_index + 1] = self.parts[part_index];
-            }
+        if (IVec2::ZERO != self.velocity)
+            && (((0 == self.velocity.x) && (0 == new_velocity.x))
+                || ((0 == self.velocity.y) && (0 == new_velocity.y)))
+        {
+            return;
         }
 
-        // Update the head position.
-        *self.parts.first_mut().unwrap() = head;
+        self.velocity = new_velocity;
     }
 
-    pub fn get_length(&self) -> usize {
-        self.parts.len()
+    pub fn crawl(&mut self) {
+        let new_head = (self.parts[0].as_ivec2() + self.velocity).as_uvec2();
+
+        if self.should_grow {
+            self.parts.push(UVec2::ZERO);
+            self.should_grow = false;
+        }
+
+        for part_index in (1..self.parts.len()).rev() {
+            self.parts[part_index] = self.parts[part_index - 1]
+        }
+
+        self.parts[0] = new_head;
     }
 
-    pub fn get_part(&self, index: usize) -> Vec2 {
-        self.parts[index]
+    pub fn detect_collision(&self) -> bool {
+        if self.parts.len() <= 1 {
+            return false;
+        }
+
+        self.parts[1..].iter().any(|&part| part == self.parts[0])
+    }
+
+    pub fn grow(&mut self) {
+        self.should_grow = true
     }
 }
